@@ -1,0 +1,1 @@
+!pip install pandas numpy openpyxl python-docx PyPDF2 tqdm scipy xlsxwriter
