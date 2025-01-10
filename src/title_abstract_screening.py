@@ -4,66 +4,56 @@ from pathlib import Path
 import os
 from difflib import SequenceMatcher
 
-def check_hfpef_terms(entry):
-    """Check if entry contains HFpEF terms or models"""
-    hfpef_terms = [
-        'hfpef', 'heart failure with preserved ejection fraction', 'diastolic dysfunction',
-        'diastolic heart failure', 'heart failure with normal ejection fraction', 'hfnef',
-        'preserved ef', 'preserved ejection fraction', 'preserved systolic function',
-        'normal systolic function', 'preserved left ventricular function', 'preserved lv function',
-        'preserved left ventricular ejection fraction', 'preserved lvef', 'normal lvef',
-        'hf with preserved ef', 'hf with normal ef', 'diastolic hf', 'dhf',
-        'left ventricular diastolic dysfunction', 'lv diastolic dysfunction'
+def check_condition_terms(entry):
+    """Check if entry contains condition terms or models"""
+    condition_terms = [
+        'term1', 'term2', 'term3', 'term4',
+        'term5', 'term6', 'term7', 'term8',
+        'term9', 'term10', 'term11', 'term12',
+        'term13', 'term14', 'term15'
     ]
     
     model_terms = [
-        'hfd + l-name', 'high-fat diet and l-name', 'two-hit model', 'three-hit model',
-        'high fat diet', 'l-name', 'obesity'
+        'model1', 'model2', 'model3',
+        'model4', 'model5', 'model6', 'model7'
     ]
     
     text = f"{entry.get('title', '')} {entry.get('abstract', '')}".lower()
-    return any(term in text for term in hfpef_terms) or any(term in text for term in model_terms)
-
-def check_metabolic_detail(entry):
-    """Check if entry contains detailed metabolic pathway information"""
-    metabolic_terms = {
-        'glucose': [
-            'glut1', 'glut4', 'glucose transport', 'glucose uptake',
-            'glycolysis', 'pfk', 'phosphofructokinase',
-            'pyruvate dehydrogenase', 'pdh', 'pdk', 'mpc',
-            'glucose oxidation', 'pyruvate metabolism'
+    return any(term in text for term in condition_terms) or any(term in text for term in model_terms)
+    
+def check_pathway_detail(entry):
+    """Check if entry contains detailed pathway information"""
+    pathway_terms = {
+        'pathway1': [
+            'term1', 'term2', 'term3',
+            'term4', 'term5', 'term6',
+            'term7', 'term8', 'term9'
         ],
-        'fatty_acids': [
-            'cd36', 'fat transporter', 'fatty acid transport',
-            'cpt1', 'carnitine palmitoyltransferase',
-            'lcad', 'acad', 'ech', 'hadh', 'hydroxyacyl-coa',
-            'malonyl-coa', 'acc', 'acetyl-coa carboxylase', 'mcd',
-            'fatty acid oxidation', 'fat oxidation', 'fao'
+        'pathway2': [
+            'term10', 'term11', 'term12',
+            'term13', 'term14', 'term15',
+            'term16', 'term17', 'term18'
         ],
-        'ketones': [
-            'bohb', 'beta-hydroxybutyrate', 'ketone bodies',
-            'bdh1', 'hydroxybutyrate dehydrogenase',
-            'scot', 'ketoacid', 'ketone oxidation'
+        'pathway3': [
+            'term19', 'term20', 'term21',
+            'term22', 'term23'
         ],
-        'bcaa': [
-            'branched-chain amino acid', 'bcaa oxidation',
-            'leucine', 'isoleucine', 'valine',
-            'bcatm', 'bckdh', 'lat', 'amino acid transport'
+        'pathway4': [
+            'term24', 'term25', 'term26',
+            'term27', 'term28', 'term29'
         ],
-        'energy_metabolism': [
-            'tca cycle', 'krebs cycle', 'citric acid cycle',
-            'nadh', 'fadh2', 'electron transport chain', 'etc',
-            'oxidative phosphorylation', 'atp synthesis',
-            'atp production', 'mitochondrial respiration',
-            'acetyl-coa', 'proton gradient', 'metabolic stress', 
-            'metabolic pathway'
+        'pathway5': [
+            'term30', 'term31', 'term32',
+            'term33', 'term34', 'term35',
+            'term36', 'term37', 'term38', 
+            'term39'
         ]
     }
     
     text = f"{entry.get('title', '')} {entry.get('abstract', '')}".lower()
     
-    pathway_matches = {pathway: 0 for pathway in metabolic_terms}
-    for pathway, terms in metabolic_terms.items():
+    pathway_matches = {pathway: 0 for pathway in pathway_terms}
+    for pathway, terms in pathway_terms.items():
         pathway_matches[pathway] = sum(1 for term in terms if term in text)
     
     # Article must have either:
@@ -74,57 +64,38 @@ def check_metabolic_detail(entry):
     
     return pathways_covered >= 3 or detailed_pathway
 
-def check_metabolic_measurements(entry):
-    """Check if entry contains metabolic measurement terms"""
-    measurement_terms = {
-        'glucose': [
-            'glycolysis', 'glucose uptake', 'glucose oxidation', 'glucose transport',
-            'glut1', 'glut4', 'hexokinase', 'phosphofructokinase', 'pfk',
-            'pyruvate dehydrogenase', 'pdh activity', 'pdk', 'mpc'
+def check_methodology_terms(entry):
+    """Check if entry contains methodology terms"""
+    method_terms = {
+        'method1': [
+            'term1', 'term2', 'term3',
+            'term4', 'term5', 'term6'
         ],
-        'fatty_acids': [
-            'fatty acid oxidation', 'fat oxidation', 'fao', 'beta oxidation',
-            'cd36', 'fat transporter', 'cpt1', 'carnitine palmitoyltransferase',
-            'lcad', 'acad', 'ech', 'hadh', 'hydroxyacyl-coa', 'thiolase',
-            'malonyl-coa', 'acc', 'acetyl-coa carboxylase', 'mcd'
+        'method2': [
+            'term7', 'term8', 'term9',
+            'term10', 'term11', 'term12'
         ],
-        'ketones': [
-            'ketone oxidation', 'beta-hydroxybutyrate','hydroxybutyrate dehydrogenase'
+        'method3': [
+            'term13', 'term14', 'term15'
         ],
-        'bcaa': [
-            'branched-chain amino acid', 'bcaa oxidation','amino acid transport'
+        'method4': [
+            'term16', 'term17', 'term18'
         ],
-        'energy_metabolism': [
-            'tca cycle', 'krebs cycle', 'citric acid cycle', 'nad','nadh', 'fad','fadh2',
-            'electron transport chain', 'etc', 'oxidative phosphorylation',
-            'atp synthesis', 'atp production', 'mitochondrial respiration',
-            'oxygen consumption', 'respiratory quotient', 'nitrosative stress',
-            'acetyl-coa', 'proton gradient', 'metabolic stress', 'metabolic pathway'
+        'method5': [
+            'term19', 'term20', 'term21',
+            'term22', 'term23', 'term24',
+            'term25', 'term26', 'term27'
         ],
         'direct_measurement_terms': [
-            # Original terms
-            'carbon-14', '14c', 'c14', 'c-14', 
-            'tritium', '3h', 'h3', 'h-3',
-            'carbon-13', '13c', 'c13', 'c-13',
-            'labeled fatty acid', 'labelled fatty acid', 'radiolabelled',
-            'isotope', 'tracer', 'isotope tracer',
-            'isolated heart', 'working heart', 'perfused heart',
-            'langendorff', 'ex vivo',
-            'mri', 'magnetic resonance', 'nmr', '31p',
-            'gc-ms', 'lc-ms', 'mass spectrometry',
-            'seahorse', 'respirometry',
-            'flux analysis', 'metabolic flux','protein expression'
+            'measurement1', 'measurement2', 'measurement3',
+            'measurement4', 'measurement5', 'measurement6',
+            'measurement7', 'measurement8', 'measurement9',
+            'measurement10', 'measurement11', 'measurement12',
             
-            
-            # Added terms for broader inclusion
-            'western blot', 'immunoblot', 'protein expression',
-            'electron microscopy', 'electron micrograph',
-            'oxygen consumption', 'oxygen electrode',
-            'mitochondrial function', 'mitochondrial morphology',
-            'metabolomics', 'metabolite profiling',
-            'enzymatic activity', 'enzyme activity',
-            'protein modification', 'protein acetylation',
-            'immunoprecipitation'
+            # Additional measurement terms
+            'measurement13', 'measurement14', 'measurement15',
+            'measurement16', 'measurement17', 'measurement18',
+            'measurement19', 'measurement20', 'measurement21'
         ]
     }
     
@@ -136,18 +107,17 @@ def check_metabolic_measurements(entry):
     has_indirect_measurement = False
     
     # Check pathway-specific measurements
-    for category in ['glucose', 'fatty_acids', 'ketones', 'bcaa', 'energy_metabolism']:
-        if any(term in text for term in measurement_terms[category]):
+    for category in ['method1', 'method2', 'method3', 'method4', 'method5']:
+        if any(term in text for term in method_terms[category]):
             has_pathway_measurement = True
             break
     
     # Check for direct measurements and pathway measurements
-        has_direct_measurement = any(term in text for term in measurement_terms['direct_measurement_terms'])
-        pathway_measurements = sum(1 for pathway in ['glucose', 'fatty_acids', 'ketones', 'bcaa', 'energy_metabolism']
-                                 if any(term in text for term in measurement_terms[pathway]))
-        
-        return has_direct_measurement or pathway_measurements >= 2
-
+    has_direct_measurement = any(term in text for term in method_terms['direct_measurement_terms'])
+    pathway_measurements = sum(1 for pathway in ['method1', 'method2', 'method3', 'method4', 'method5']
+                             if any(term in text for term in method_terms[pathway]))
+    
+    return has_direct_measurement or pathway_measurements >= 2
 
 def normalize_text(text):
     """Normalize text for comparison, preserving more meaningful variations"""
