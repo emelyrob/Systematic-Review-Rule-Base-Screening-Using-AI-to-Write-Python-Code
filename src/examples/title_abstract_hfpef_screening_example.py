@@ -66,13 +66,10 @@ def check_metabolic_detail(entry):
     for pathway, terms in metabolic_terms.items():
         pathway_matches[pathway] = sum(1 for term in terms if term in text)
     
-    # Article must have either:
-    # 1. Coverage of at least 3 different pathways (at least 1 term each)
-    # 2. OR detailed coverage of any single pathway (3+ terms)
     pathways_covered = sum(1 for count in pathway_matches.values() if count > 0)
-    detailed_pathway = any(count >= 3 for count in pathway_matches.values())
+    detailed_pathway = any(count >= 1 for count in pathway_matches.values())
     
-    return pathways_covered >= 3 or detailed_pathway
+    return pathways_covered >= 1 or detailed_pathway
 
 def check_metabolic_measurements(entry):
     """Check if entry contains metabolic measurement terms"""
@@ -146,7 +143,7 @@ def check_metabolic_measurements(entry):
         pathway_measurements = sum(1 for pathway in ['glucose', 'fatty_acids', 'ketones', 'bcaa', 'energy_metabolism']
                                  if any(term in text for term in measurement_terms[pathway]))
         
-        return has_direct_measurement or pathway_measurements >= 2
+        return has_direct_measurement or pathway_measurements >= 1
 
 
 def normalize_text(text):
@@ -181,51 +178,69 @@ def parse_endnote_entries(text):
     Returns:
         list: List of dictionaries containing parsed article data
     """
-    # Split text into individual entries (separated by double newlines)
-    entries = text.strip().split('\n\n')
+    # Split text into individual entries
+    entries = re.split(r'\n\n(?=Reference Type:)', text.strip())
     parsed_entries = []
     
     for entry in entries:
         if not entry.strip():
             continue
-            
+        
         entry_dict = {}
         
-        # Split into citation and abstract parts
-        parts = entry.split('\n\t', 1)  # Split on first tab indent
+        # Extract reference type
+        type_match = re.search(r'Reference Type:\s*(.+)', entry)
+        if type_match:
+            entry_dict['publication_type'] = type_match.group(1).strip()
         
-        if len(parts) >= 1:
-            # Parse citation part
-            citation = parts[0]
-            
-            # Extract authors and title
-            citation_parts = citation.split('. (')
-            if len(citation_parts) >= 2:
-                entry_dict['authors'] = citation_parts[0].strip()
-                # Extract year and title
-                year_title = citation_parts[1].split('). "')
-                if len(year_title) >= 2:
-                    entry_dict['year'] = year_title[0].strip()
-                    # Clean up title and remove quotes
-                    title_parts = year_title[1].split('." ')
-                    if title_parts:
-                        entry_dict['title'] = title_parts[0].strip()
-                    
-                    # Extract journal info
-                    if len(title_parts) > 1:
-                        journal_info = title_parts[1].strip()
-                        entry_dict['journal'] = journal_info
+        # Extract year
+        year_match = re.search(r'Year:\s*(\d{4})', entry)
+        if year_match:
+            entry_dict['year'] = year_match.group(1)
         
-        # Extract abstract if present
-        if len(parts) >= 2:
-            abstract = parts[1].strip()
-            # Clean up abstract formatting
-            abstract = re.sub(r'<ovid:[^>]+>', '', abstract)  # Remove ovid tags
+        # Extract title
+        title_match = re.search(r'Title:\s*(.+?)(?:\n|$)', entry, re.DOTALL)
+        if title_match:
+            entry_dict['title'] = title_match.group(1).strip().replace('\n', ' ')
+        
+        # Extract journal
+        journal_match = re.search(r'Journal:\s*(.+?)(?:\n|$)', entry)
+        if journal_match:
+            entry_dict['journal'] = journal_match.group(1).strip()
+        
+        # Extract volume
+        volume_match = re.search(r'Volume:\s*(\d+)', entry)
+        if volume_match:
+            entry_dict['volume'] = volume_match.group(1)
+        
+        # Extract issue
+        issue_match = re.search(r'Issue:\s*(\d+)', entry)
+        if issue_match:
+            entry_dict['issue'] = issue_match.group(1)
+        
+        # Extract authors
+        authors_match = re.search(r'Author:\s*(.+?)(?:\n|$)', entry, re.DOTALL)
+        if authors_match:
+            # Clean up and handle multiple authors
+            authors = authors_match.group(1).strip().replace('\n', ' ')
+            entry_dict['authors'] = authors
+        
+        # Extract abstract
+        abstract_match = re.search(r'Abstract:\s*(.+?)(?:\n\w+:|$)', entry, re.DOTALL)
+        if abstract_match:
+            abstract = abstract_match.group(1).strip().replace('\n', ' ')
             entry_dict['abstract'] = abstract
         
-        if entry_dict:  # Only add if we successfully parsed something
-            entry_dict['database'] = 'Endnote'
-            entry_dict['publication_type'] = 'Journal Article'  # Default type
+        # Additional metadata
+        doi_match = re.search(r'DOI:\s*(.+?)(?:\n|$)', entry)
+        if doi_match:
+            entry_dict['doi'] = doi_match.group(1).strip()
+        
+        # Add source database
+        entry_dict['database'] = 'Endnote'
+        
+        # Only add entries with at least a title
+        if entry_dict.get('title'):
             parsed_entries.append(entry_dict)
     
     return parsed_entries
@@ -333,33 +348,23 @@ def create_excel_report(categories, output_file='articles_classification.xlsx'):
 
 def main():
     try:
+        # Prompt for input file
+        input_file = input("Enter the path to your Endnote export text file: ").strip()
+        
+        # Verify file exists
+        if not os.path.exists(input_file):
+            print(f"Error: File {input_file} does not exist.")
+            return
+        
         # Read the input file
-        input_file = 'Combined_abs_1.2.24.txt'
         print(f"Reading from {input_file}...")
         
         with open(input_file, 'r', encoding='utf-8') as file:
             text = file.read()
         
-        # Extract sections
-        sections = extract_sections(text)
-        
-        # Parse each section
-        all_entries = []
-        for section_name, section_text in sections.items():
-            if not section_text.strip():
-                continue
-                
-            print(f"\nProcessing {section_name} section...")
-            
-            if section_name == 'MEDLINE':
-                entries = parse_medline_entries(section_text)
-            elif section_name == 'EMBASE':
-                entries = parse_embase_entries(section_text)
-            else:  # Web of Science
-                entries = parse_wos_entries(section_text)
-            
-            print(f"Found {len(entries)} entries in {section_name}")
-            all_entries.extend(entries)
+        # Parse Endnote entries
+        print("Parsing entries...")
+        all_entries = parse_endnote_entries(text)
         
         # Filter and categorize
         print("\nCategorizing entries...")
