@@ -108,7 +108,7 @@ def validate_metabolic_pathways(combined_text: str) -> Dict[str, Any]:
     print("Metabolic pathway hits:", pathway_hits)
     
     return {
-        'is_valid': len(pathway_hits) >= 8,  # Adjust threshold as needed
+        'is_valid': len(pathway_hits) >= 1,  # Adjust threshold as needed
         'terms_found': pathway_hits
     }
 
@@ -194,7 +194,7 @@ def validate_measurements(text: str, sections: Dict[str, str]) -> Dict[str, Any]
         
         # Return results with categories and validation status
         return {
-            'is_valid': len(measurement_hits) >= 9,  # Adjust threshold as needed
+            'is_valid': len(measurement_hits) >= 1,  # Adjust threshold as needed
             'terms_found': measurement_hits,  # List of matched terms
             'category_hits': {  # Matched terms grouped by category
                 category: [term for term in terms if re.search(term, normalized_text)]
