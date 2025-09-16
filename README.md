@@ -52,12 +52,7 @@ import xlsxwriter
 
 1. Prepare your EndNote export file in .txt format
 2. Upload the .txt file to your working directory
-3. Run the title/abstract screening script:
-
-# In your Jupyter notebook
-with open('template_script_title_abstract_screening.py', 'r') as file:
-    exec(file.read())
-  
+3. Run the title/abstract screening script
 4. When prompted, enter your input file name (including .txt extension)
 5. Review the generated Excel report: 'articles_classification.xlsx'
 
@@ -87,7 +82,7 @@ The screening process generates an Excel file containing:
 
 ## Example Implementation
 
-See 'examples/hfpef_screening.py' for a complete implementation focused on heart failure with preserved ejection fraction (HFpEF) research.
+See 'Resources/Examples/Title_Abstracts_Screening Script_HFpEF_Cardiac Terms_Example.py' for a complete implementation focused on heart failure with preserved ejection fraction (HFpEF) research.
 
 ## Customization Guidelines
 
@@ -106,35 +101,4 @@ See 'examples/hfpef_screening.py' for a complete implementation focused on heart
    - Check for false positives/negatives
    - Document adjustments
 
-## Troubleshooting
-
-Common issues and solutions:
-
-1. File Reading Errors:
-   - Ensure correct file path
-   - Check file encoding (use UTF-8)
-   - Verify file format matches expected structure
-
-2. Memory Issues:
-   - Process files in smaller batches
-   - Clear variables between runs
-   - Restart kernel if needed
-
-## Support
-
-For issues or questions:
-1. Check the troubleshooting section
-2. Review example implementations
-3. Open an issue in this repository
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit pull requests or open issues for improvements.
-
-
-
-## Citation
-
-If you use this toolkit in your research, please cite:
-[Citation details to be added upon publication]
 
